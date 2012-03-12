@@ -52,24 +52,21 @@ def ingest_package(package, tries=0):
             })
     except Exception as e:
         return ingest_package(package, tries + 1)
-    
-    #print result
+
     return result
 
 
 def populate():
     print "Getting the list of all packages."
     client = xmlrpclib.ServerProxy('http://pypi.python.org/pypi')
-    packages = client.list_packages()[:3]
+    packages = client.list_packages()
     print "Ridiculous!  Found %i packages." % len(packages)
-    
+
     print "Ingesting %i packages." % len(packages)
     with cm(shelve.open(fname, writeback=True)) as d:
         d['packages'] = d.get('packages', {})
 
         for package in packages:
-            pp = pprint.PrettyPrinter(indent=4)
-            pp.pprint(d['packages'])
             if package not in d['packages']:
                 result = ingest_package(package)
                 d['packages'][result['name']] = result
