@@ -81,6 +81,7 @@ def is_python3(package):
     if ver in py3_classifiers:
         return True
 
+
 def main():
     print "Scraping pypi..."
     populate()
