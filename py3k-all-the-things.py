@@ -17,6 +17,16 @@ from contextlib import closing as cm
 import shelve
 import xmlrpclib
 
+fname = 'pypi-shelve.db'
+
+py3_classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.0",
+    "Programming Language :: Python :: 3.1",
+    "Programming Language :: Python :: 3.2",
+    "Programming Language :: Python :: 3.3",
+]
+
 
 def ingest_package(package, tries=0):
     print "Processing package", package
@@ -60,16 +70,31 @@ def populate():
     results = pool.map(ingest_package, packages)
     print "Complete!  Found %i packages." % len(results)
 
-    # pprint.pprint(d['packages'][0]['releases'][0]['data']['classifiers'])
-    fname = 'pypi-shelve.db'
     print "Storing to shelve %r" % fname
     with cm(shelve.open(fname)) as d:
         d['packages'] = results
+        # pprint.pprint(d['packages'][0]['releases'][0]['data']['classifiers'])
 
     print "Complete!"
+
+
+def is_python3(package):
+    return ([
+        c in package['releases'][0]['data']['classifiers']
+        for c in py3classifiers
+    ])
 
 
 if __name__ == '__main__':
     print "Scraping pypi..."
     populate()
     print "Complete!"
+
+    with cm(shelve.open(fname)) as d:
+        ostensibly_in_py3 = filter(in_python3, d['packages'])
+        ostensibly_not_in_py3 = filter(
+            lambda p: not in_python3(p), d['packages']
+        )
+
+    print "In py3:", len(ostensibly_in_py3)
+    print "No in py3:", len(ostensibly_not_in_py3)
