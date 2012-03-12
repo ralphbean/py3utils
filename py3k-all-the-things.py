@@ -16,6 +16,7 @@
 from contextlib import closing as cm
 import shelve
 import xmlrpclib
+import pprint
 
 fname = 'pypi-shelve.db'
 
@@ -66,6 +67,8 @@ def populate():
         d['packages'] = d.get('packages', [])
 
         for package in packages:
+            pp = pprint.PrettyPrinter(indent=4)
+            pp.pprint(d['packages'])
             if package not in d['packages']:
                 d['packages'] = ingest_package(package)
                 d.sync()
