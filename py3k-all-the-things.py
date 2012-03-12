@@ -55,25 +55,22 @@ def ingest_package(package, tries=0):
     return result
 
 
-import multiprocessing as mp
-pool = mp.Pool(100)
-
-
 def populate():
     print "Getting the list of all packages."
     client = xmlrpclib.ServerProxy('http://pypi.python.org/pypi')
-    packages = client.list_packages()
-    print "Complete!"
+    packages = client.list_packages()[:20]
+    print "Ridiculous!  Found %i packages." % len(packages)
 
     print "Ingesting %i packages." % len(packages)
-    # Do it in parallel to go faster
-    results = pool.map(ingest_package, packages)
-    print "Complete!  Found %i packages." % len(results)
-
-    print "Storing to shelve %r" % fname
     with cm(shelve.open(fname)) as d:
-        d['packages'] = results
-        # pprint.pprint(d['packages'][0]['releases'][0]['data']['classifiers'])
+        d['packages'] = d.get('packages', [])
+
+        for package in packages:
+            if package not in d['packages']:
+                d['packages'] = ingest_package(package)
+                d.sync()
+            else:
+                print "Skipping          ", package
 
     print "Complete!"
 
@@ -81,7 +78,7 @@ def populate():
 def is_python3(package):
     return ([
         c in package['releases'][0]['data']['classifiers']
-        for c in py3classifiers
+        for c in py3_classifiers
     ])
 
 
@@ -91,7 +88,7 @@ if __name__ == '__main__':
     print "Complete!"
 
     with cm(shelve.open(fname)) as d:
-        ostensibly_in_py3 = filter(in_python3, d['packages'])
+        ostensibly_in_py3 = filter(is_python3, d['packages'])
         ostensibly_not_in_py3 = filter(
             lambda p: not in_python3(p), d['packages']
         )
