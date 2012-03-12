@@ -86,8 +86,6 @@ def main():
     print "Scraping pypi..."
     populate()
     print "Complete!"
-    if True:
-        return
     with cm(shelve.open(fname)) as d:
         d = dict(d)
         ostensibly_in_py3 = filter(is_python3, d['packages'])
