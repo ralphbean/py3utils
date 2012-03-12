@@ -16,6 +16,7 @@
 from contextlib import closing as cm
 import shelve
 import xmlrpclib
+import pprint
 
 fname = 'pypi-shelve.db'
 
@@ -58,40 +59,40 @@ def ingest_package(package, tries=0):
 def populate():
     print "Getting the list of all packages."
     client = xmlrpclib.ServerProxy('http://pypi.python.org/pypi')
-    packages = client.list_packages()[:20]
+    packages = client.list_packages()
     print "Ridiculous!  Found %i packages." % len(packages)
 
     print "Ingesting %i packages." % len(packages)
-    with cm(shelve.open(fname)) as d:
-        d['packages'] = d.get('packages', [])
+    with cm(shelve.open(fname, writeback=True)) as d:
+        d['packages'] = d.get('packages', {})
 
         for package in packages:
             if package not in d['packages']:
-                d['packages'] = ingest_package(package)
+                result = ingest_package(package)
+                d['packages'][result['name']] = result
                 d.sync()
             else:
                 print "Skipping          ", package
-
     print "Complete!"
 
 
 def is_python3(package):
-    return ([
-        c in package['releases'][0]['data']['classifiers']
-        for c in py3_classifiers
-    ])
+    ver = package['releases'][0]['data']['classifiers']
+    if ver in py3_classifiers:
+        return True
 
-
-if __name__ == '__main__':
+def main():
     print "Scraping pypi..."
     populate()
     print "Complete!"
-
     with cm(shelve.open(fname)) as d:
-        ostensibly_in_py3 = filter(is_python3, d['packages'])
+        ostensibly_in_py3 = filter(is_python3, d['packages'].values())
         ostensibly_not_in_py3 = filter(
-            lambda p: not in_python3(p), d['packages']
+            lambda p: not is_python3(p), d['packages'].values()
         )
 
     print "In py3:", len(ostensibly_in_py3)
-    print "No in py3:", len(ostensibly_not_in_py3)
+    print "Not in py3:", len(ostensibly_not_in_py3)
+
+if __name__ == str('__main__'):
+    main()
