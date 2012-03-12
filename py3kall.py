@@ -18,6 +18,8 @@ import shelve
 import xmlrpclib
 import pprint
 
+import dependencies
+
 fname = 'pypi-shelve.db'
 
 py3_classifiers = [
@@ -69,7 +71,17 @@ def populate():
         for package in packages:
             if package not in d['packages']:
                 result = ingest_package(package)
+
+                try:
+                    requires = dependencies.get_dependencies(result['name'])
+                    print result['name'], "depends on %r" % requires
+                except Exception as e:
+                    print str(e)
+                    continue
+
                 d['packages'][result['name']] = result
+                d['packages'][result['name']]['dependencies'] = requires
+
                 d.sync()
             else:
                 print "Skipping          ", package
