@@ -84,13 +84,13 @@ def is_python3(package):
         for c in py3_classifiers
     ])
 
-
-if __name__ == '__main__':
+def main():
     print "Scraping pypi..."
     populate()
     print "Complete!"
 
     with cm(shelve.open(fname)) as d:
+        d = dict(d)
         ostensibly_in_py3 = filter(is_python3, d['packages'])
         ostensibly_not_in_py3 = filter(
             lambda p: not in_python3(p), d['packages']
@@ -98,3 +98,6 @@ if __name__ == '__main__':
 
     print "In py3:", len(ostensibly_in_py3)
     print "No in py3:", len(ostensibly_not_in_py3)
+
+if __name__ == str('__main__'):
+    main()
