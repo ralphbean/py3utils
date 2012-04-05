@@ -36,8 +36,16 @@ import sys
 
 from collections import OrderedDict
 
+yumobj = None
+try:
+    import yum
+    yumobj = yum.YumBase()
+    yumobj.setCacheDir()
+except ImportError:
+    pass
 
-def get_dependencies(package_name, calls=0):
+
+def get_pypi_dependencies(package_name, calls=0):
     """ Return the list of dependencies of the given package name.
 
     How does it do this?
@@ -60,22 +68,81 @@ def get_dependencies(package_name, calls=0):
         ]
     except pkg_resources.DistributionNotFound as e:
         pipsupport.install_distributions([package_name])
-        return get_dependencies(package_name, calls + 1)
+        return get_pypi_dependencies(package_name, calls + 1)
 
 
 def build_dep_tree(package_name):
     """
-    Recursively call get_dependencies and format the tree as an OrderedDict
+    Recursively call get_pypi_dependencies and format the tree as an
+    OrderedDict
     """
 
     node = OrderedDict()
-    for dep in get_dependencies(package_name):
+    for dep in get_pypi_dependencies(package_name):
         node[dep] = build_dep_tree(dep)
 
     if not node:
         return {}
 
     return node
+
+
+def in_yum(pkg_name):
+    possible_names = [
+        'python-' + pkg_name,
+        'python-' + pkg_name.lower(),
+        #'python-' + CamelCaseToDashes(pkg_name),
+    ]
+    return len(
+        sum([
+            yumobj.pkgSack.searchNevra(name=possible_name)
+            for possible_name in possible_names
+        ], [])
+    ) != 0
+
+
+def count_keys(deps):
+    if not deps:
+        return {}
+    counts = {}
+    for key in deps.keys():
+        counts[key] = 1
+
+    for child in deps.values():
+        child_counts = count_keys(child)
+        for key, value in child_counts.iteritems():
+            counts[key] = counts.get(key, 0) + value
+
+    return counts
+
+
+def uniqify_preserving_order(seq):
+    """ http://www.peterbe.com/plog/uniqifiers-benchmark """
+
+    seen = {}
+    result = []
+    for item in seq:
+        if item in seen: continue
+        seen[item] = 1
+        result.append(item)
+    return result
+
+
+def special_flatten(deps):
+    if not deps: return []
+
+    flattened = []
+    for v in deps.values(): flattened += special_flatten(v)
+    flattened += deps.keys()
+    flattened = uniqify_preserving_order(flattened)
+    return flattened
+
+
+def print_header(msg):
+    msg = "| %s |" % msg
+    print '-' * len(msg)
+    print msg
+    print '-' * len(msg)
 
 
 def main():
@@ -87,13 +154,30 @@ def main():
 
     deps = {}
     for arg in sys.argv[1:]:
+        print_header("Gathering dependencies for %s" % arg)
         deps[arg] = build_dep_tree(arg)
 
-    msg = "| The list of dependencies according to pypi.python.org |"
-    print '-' * len(msg)
-    print msg
-    print '-' * len(msg)
+    print_header("The list of dependencies according to pypi.python.org")
     print json.dumps(deps, indent=4)
+
+    if not yumobj:
+        msg = "Couldn't import yum.  You may need to symlink it in."
+        print_header(msg)
+        sys.exit(1)
+
+    print_header("Trying to figure out what of these pkgs are in yum.")
+
+    # Order distributions by children first
+    pypi_dists = special_flatten(deps)
+
+    for pkg_name in pypi_dists:
+        if not in_yum(pkg_name):
+            print "-",
+        else:
+            print "+",
+
+        print pkg_name
+
 
 
 if __name__ == '__main__':
