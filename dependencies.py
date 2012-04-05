@@ -128,17 +128,20 @@ def uniqify_preserving_order(seq):
     seen = {}
     result = []
     for item in seq:
-        if item in seen: continue
+        if item in seen:
+            continue
         seen[item] = 1
         result.append(item)
     return result
 
 
 def special_flatten(deps):
-    if not deps: return []
+    if not deps:
+        return []
 
     flattened = []
-    for v in deps.values(): flattened += special_flatten(v)
+    for v in deps.values():
+        flattened += special_flatten(v)
     flattened += deps.keys()
     flattened = uniqify_preserving_order(flattened)
     return flattened
@@ -183,7 +186,6 @@ def main():
             print "+",
 
         print pkg_name
-
 
 
 if __name__ == '__main__':
