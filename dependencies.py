@@ -2,9 +2,10 @@
 
 For instance:
 
+     % virtualenv --system-site-packages scratch
+     % source scratch/bin/activate
+     (scratch)% python dependencies.py tw2.jquery
 
-
-     % python dependencies.py tw2.jquery
     -----------------------------------------
     | Gathering dependencies for tw2.jquery |
     -----------------------------------------
