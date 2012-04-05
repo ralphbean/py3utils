@@ -123,6 +123,7 @@ def camel2dashes(name):
 
 def in_yum(pkg_name):
     possible_names = [
+        pkg_name,
         'python-' + pkg_name,
         'python-' + pkg_name.lower(),
         'python-' + camel2dashes(pkg_name),
