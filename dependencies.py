@@ -140,7 +140,7 @@ def count_keys(deps):
     if not deps:
         return {}
     counts = {}
-    for key in deps.keys():
+    for key in deps:
         counts[key] = 1
 
     for child in deps.values():
@@ -171,7 +171,7 @@ def special_flatten(deps):
     flattened = []
     for v in deps.values():
         flattened += special_flatten(v)
-    flattened += deps.keys()
+    flattened += deps
     flattened = uniqify_preserving_order(flattened)
     return flattened
 
