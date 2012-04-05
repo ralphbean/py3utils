@@ -32,6 +32,7 @@ For instance:
 import json
 import pkg_resources
 import pipsupport
+import re
 import sys
 
 from collections import OrderedDict
@@ -87,11 +88,16 @@ def build_dep_tree(package_name):
     return node
 
 
+def camel2dashes(name):
+    return '-'.join([s.lower() for s in
+           re.findall(r'([A-Z][a-z0-9]+|[a-z0-9]+|[A-Z0-9]+)', name)])
+
+
 def in_yum(pkg_name):
     possible_names = [
         'python-' + pkg_name,
         'python-' + pkg_name.lower(),
-        #'python-' + CamelCaseToDashes(pkg_name),
+        'python-' + camel2dashes(pkg_name),
     ]
     return len(
         sum([
