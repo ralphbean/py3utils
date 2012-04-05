@@ -2,7 +2,12 @@
 
 For instance:
 
+
+
      % python dependencies.py tw2.jquery
+    -----------------------------------------
+    | Gathering dependencies for tw2.jquery |
+    -----------------------------------------
     ---------------------------------------------------------
     | The list of dependencies according to pypi.python.org |
     ---------------------------------------------------------
@@ -12,20 +17,43 @@ For instance:
                 "WebOb": {},
                 "simplejson": {},
                 "PasteDeploy": {},
-                "speaklater": {},
-                "decorator": {}
+                "weberror": {
+                    "WebOb": {},
+                    "Tempita": {},
+                    "Pygments": {},
+                    "Paste": {}
+                }
             },
             "tw2.forms": {
                 "tw2.core": {
                     "WebOb": {},
                     "simplejson": {},
                     "PasteDeploy": {},
-                    "speaklater": {},
-                    "decorator": {}
+                    "weberror": {
+                        "WebOb": {},
+                        "Tempita": {},
+                        "Pygments": {},
+                        "Paste": {}
+                    }
                 }
-            }
+            },
+            "formencode": {}
         }
     }
+    -------------------------------------------------------
+    | Trying to figure out what of these pkgs are in yum. |
+    -------------------------------------------------------
+    + WebOb
+    + Tempita
+    + Pygments
+    + Paste
+    + simplejson
+    + PasteDeploy
+    + weberror
+    - tw2.core
+    - tw2.forms
+    + formencode
+    - tw2.jquery
 
 """
 
